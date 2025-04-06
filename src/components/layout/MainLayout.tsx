@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Bot, FileText, Home, Settings, Clock, Workflow } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainLayoutProps {
@@ -14,20 +14,33 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-brand-light">
         <AppSidebar />
-        <main className="flex-1">
-          <div className="flex items-center h-14 md:h-16 px-3 md:px-4 border-b bg-white">
-            <SidebarTrigger />
-            <div className="ml-3 md:ml-4 text-base md:text-lg font-medium truncate">Autonomous Knowledge Worker</div>
-          </div>
-          <div className="p-3 md:p-6">{children}</div>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader />
+          <div className="flex-1 p-3 md:p-6 overflow-y-auto">{children}</div>
         </main>
       </div>
     </SidebarProvider>
   );
 };
 
+const AppHeader = () => {
+  return (
+    <div className="flex items-center h-14 md:h-16 px-3 md:px-4 border-b bg-white">
+      <SidebarTrigger />
+      <div className="ml-3 md:ml-4 text-base md:text-lg font-medium truncate">Autonomous Knowledge Worker</div>
+    </div>
+  );
+};
+
 const AppSidebar = () => {
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const [currentPath, setCurrentPath] = useState("/");
+  
+  useEffect(() => {
+    setCurrentPath(location.pathname);
+  }, [location]);
+  
   const menuItems = [
     { title: "Dashboard", icon: Home, path: "/" },
     { title: "Agents", icon: Bot, path: "/agents" },
@@ -50,7 +63,11 @@ const AppSidebar = () => {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={isMobile ? item.title : undefined}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={isMobile ? item.title : undefined}
+                    isActive={currentPath === item.path}
+                  >
                     <Link to={item.path} className="flex items-center gap-2">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
