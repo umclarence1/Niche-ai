@@ -25,7 +25,7 @@ const Index = () => {
       <DashboardHeader onCreateWorkflow={handleCreateWorkflow} />
       <div className="grid grid-cols-1 gap-4 md:gap-6">
         <AgentConfiguration />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className={`grid grid-cols-1 ${isMobile ? "" : "lg:grid-cols-2"} gap-4 md:gap-6`}>
           <FileUpload />
           <TaskMonitor />
         </div>
