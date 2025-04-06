@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, PlayCircle, StopCircle } from "lucide-react";
+import { AlertCircle, Clock, PlayCircle, StopCircle, ChevronDown, ChevronUp } from "lucide-react";
 import StatusBadge from "../ui/custom/StatusBadge";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
 interface Task {
   id: string;
@@ -20,8 +22,8 @@ interface Task {
 }
 
 const TaskMonitor: React.FC = () => {
-  // Mock data for demonstration
-  const tasks: Task[] = [
+  const { toast } = useToast();
+  const [tasks, setTasks] = useState<Task[]>([
     {
       id: "task-1",
       name: "Financial Report Generation",
@@ -49,7 +51,64 @@ const TaskMonitor: React.FC = () => {
         { name: "Verification", status: "idle" },
       ],
     },
-  ];
+  ]);
+  
+  // Track which tasks have expanded details
+  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({
+    "task-1": true,
+    "task-2": false
+  });
+
+  const toggleExpandTask = (taskId: string) => {
+    setExpandedTasks({
+      ...expandedTasks,
+      [taskId]: !expandedTasks[taskId]
+    });
+  };
+
+  const handleStartTask = (taskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        toast({
+          title: "Task Started",
+          description: `"${task.name}" is now running`,
+        });
+        return {
+          ...task,
+          status: "running" as const,
+          progress: 5,
+          startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          eta: "Calculating..."
+        };
+      }
+      return task;
+    }));
+  };
+
+  const handleStopTask = (taskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        toast({
+          title: "Task Stopped",
+          description: `"${task.name}" has been paused`,
+          variant: "destructive",
+        });
+        return {
+          ...task,
+          status: "idle" as const
+        };
+      }
+      return task;
+    }));
+  };
+
+  const handleViewDetails = (taskId: string) => {
+    toast({
+      title: "Viewing Task Details",
+      description: "Opening detailed task information...",
+    });
+    // In a real app, this would navigate to a detailed view or open a modal
+  };
 
   return (
     <Card className="mb-6">
@@ -66,17 +125,31 @@ const TaskMonitor: React.FC = () => {
         {tasks.length > 0 ? (
           <div className="space-y-4">
             {tasks.map((task) => (
-              <div key={task.id} className="border rounded-lg p-4">
+              <Collapsible 
+                key={task.id} 
+                open={expandedTasks[task.id]} 
+                onOpenChange={() => toggleExpandTask(task.id)}
+                className="border rounded-lg p-4 transition-all duration-200 hover:shadow-sm"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3">
-                  <div className="flex items-center mb-2 sm:mb-0">
+                  <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="p-0 h-6 w-6 rounded-full">
+                        {expandedTasks[task.id] ? 
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" /> : 
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        }
+                      </Button>
+                    </CollapsibleTrigger>
                     <h3 className="font-medium">{task.name}</h3>
                     <StatusBadge status={task.status} className="ml-2" />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
                     {task.status === "idle" ? (
                       <Button 
                         size="sm" 
                         className="h-8 bg-brand-teal hover:bg-brand-teal/90 flex items-center gap-1"
+                        onClick={() => handleStartTask(task.id)}
                       >
                         <PlayCircle className="h-4 w-4" />
                         <span>Start</span>
@@ -86,6 +159,7 @@ const TaskMonitor: React.FC = () => {
                         size="sm" 
                         variant="outline" 
                         className="h-8 text-red-600 border-red-200 flex items-center gap-1"
+                        onClick={() => handleStopTask(task.id)}
                       >
                         <StopCircle className="h-4 w-4" />
                         <span>Stop</span>
@@ -96,6 +170,7 @@ const TaskMonitor: React.FC = () => {
                       size="sm" 
                       variant="ghost" 
                       className="h-8"
+                      onClick={() => handleViewDetails(task.id)}
                     >
                       Details
                     </Button>
@@ -103,7 +178,7 @@ const TaskMonitor: React.FC = () => {
                 </div>
                 
                 {task.status === "running" && (
-                  <div className="mb-4">
+                  <div className="mb-4 px-8">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Progress</span>
                       <span>{task.progress}%</span>
@@ -116,18 +191,20 @@ const TaskMonitor: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-3">
-                  {task.steps.map((step, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm"
-                    >
-                      <span className="truncate">{step.name}</span>
-                      <StatusBadge status={step.status} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 px-8">
+                    {task.steps.map((step, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm"
+                      >
+                        <span className="truncate">{step.name}</span>
+                        <StatusBadge status={step.status} />
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         ) : (
