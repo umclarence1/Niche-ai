@@ -7,9 +7,11 @@ import FileUpload from "../components/Dashboard/FileUpload";
 import TaskMonitor from "../components/Dashboard/TaskMonitor";
 import WorkflowHistory from "../components/Dashboard/WorkflowHistory";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const handleCreateWorkflow = () => {
     toast({
@@ -21,9 +23,9 @@ const Index = () => {
   return (
     <MainLayout>
       <DashboardHeader onCreateWorkflow={handleCreateWorkflow} />
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:gap-6">
         <AgentConfiguration />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <FileUpload />
           <TaskMonitor />
         </div>
