@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, X, ArrowRight } from "lucide-react";
+import { Check, Clock, X, ArrowRight, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const WorkflowHistory = () => {
@@ -44,14 +44,14 @@ const WorkflowHistory = () => {
   };
 
   return (
-    <Card>
+    <Card className="hover-scale">
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium flex items-center gap-2">
-            <Clock className="h-5 w-5 text-brand-teal" />
+            <LineChart className="h-5 w-5 text-brand-teal" />
             Recent Workflows
           </h3>
-          <Button asChild variant="ghost" size="sm" className="gap-1">
+          <Button asChild variant="ghost" size="sm" className="gap-1 hover-scale">
             <Link to="/history">
               View All <ArrowRight className="h-4 w-4" />
             </Link>
@@ -70,7 +70,7 @@ const WorkflowHistory = () => {
             </thead>
             <tbody>
               {recentWorkflows.map((workflow) => (
-                <tr key={workflow.id} className="border-b hover:bg-muted/50">
+                <tr key={workflow.id} className="border-b hover:bg-muted/50 transition-colors duration-150">
                   <td className="px-3 py-2">
                     <div className="font-medium">{workflow.name}</div>
                   </td>

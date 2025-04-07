@@ -8,6 +8,11 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
+interface TaskStep {
+  name: string;
+  status: "idle" | "running" | "completed" | "failed" | "pending";
+}
+
 interface Task {
   id: string;
   name: string;
@@ -15,10 +20,7 @@ interface Task {
   progress: number;
   startTime?: string;
   eta?: string;
-  steps: {
-    name: string;
-    status: "idle" | "running" | "completed" | "failed" | "pending";
-  }[];
+  steps: TaskStep[];
 }
 
 const TaskMonitor: React.FC = () => {
@@ -60,33 +62,97 @@ const TaskMonitor: React.FC = () => {
   });
 
   const toggleExpandTask = (taskId: string) => {
-    setExpandedTasks({
-      ...expandedTasks,
-      [taskId]: !expandedTasks[taskId]
-    });
+    setExpandedTasks(prev => ({
+      ...prev,
+      [taskId]: !prev[taskId]
+    }));
   };
 
   const handleStartTask = (taskId: string) => {
-    setTasks(tasks.map(task => {
+    setTasks(prevTasks => prevTasks.map(task => {
       if (task.id === taskId) {
         toast({
           title: "Task Started",
           description: `"${task.name}" is now running`,
         });
+        
         return {
           ...task,
           status: "running" as const,
           progress: 5,
           startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          eta: "Calculating..."
+          eta: "Calculating...",
+          steps: task.steps.map((step, index) => ({
+            ...step,
+            status: index === 0 ? "running" : "pending"
+          }))
         };
       }
       return task;
     }));
+
+    // Simulate progress updates for the started task
+    const progressInterval = setInterval(() => {
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task => {
+          if (task.id === taskId && task.status === "running") {
+            // Increase progress by a random amount between 1-5%
+            const progressIncrease = Math.floor(Math.random() * 5) + 1;
+            const newProgress = Math.min(task.progress + progressIncrease, 100);
+            
+            // Update ETA based on progress
+            let eta = "Calculating...";
+            if (newProgress > 10) {
+              const remainingPercent = 100 - newProgress;
+              eta = remainingPercent <= 10 ? "Less than a minute" : `${Math.ceil(remainingPercent / 10)} minutes`;
+            }
+
+            // Update steps based on progress
+            const updatedSteps = task.steps.map((step, index) => {
+              const stepThreshold = (index / task.steps.length) * 100;
+              const nextStepThreshold = ((index + 1) / task.steps.length) * 100;
+              
+              if (newProgress >= nextStepThreshold) {
+                return { ...step, status: "completed" as const };
+              } else if (newProgress >= stepThreshold) {
+                return { ...step, status: "running" as const };
+              }
+              return { ...step, status: "pending" as const };
+            });
+
+            // If task is complete, clear the interval
+            if (newProgress >= 100) {
+              clearInterval(progressInterval);
+              toast({
+                title: "Task Completed",
+                description: `"${task.name}" has finished successfully`,
+              });
+              return {
+                ...task,
+                progress: 100,
+                status: "completed" as const,
+                eta: "Completed",
+                steps: updatedSteps
+              };
+            }
+
+            return {
+              ...task,
+              progress: newProgress,
+              eta,
+              steps: updatedSteps
+            };
+          }
+          return task;
+        });
+        
+        return updatedTasks;
+      });
+    }, 1500); // Update every 1.5 seconds
   };
 
   const handleStopTask = (taskId: string) => {
-    setTasks(tasks.map(task => {
+    setTasks(prevTasks => prevTasks.map(task => {
       if (task.id === taskId) {
         toast({
           title: "Task Stopped",
@@ -95,7 +161,10 @@ const TaskMonitor: React.FC = () => {
         });
         return {
           ...task,
-          status: "idle" as const
+          status: "idle" as const,
+          steps: task.steps.map(step => 
+            step.status === "running" ? { ...step, status: "idle" as const } : step
+          )
         };
       }
       return task;
@@ -107,11 +176,12 @@ const TaskMonitor: React.FC = () => {
       title: "Viewing Task Details",
       description: "Opening detailed task information...",
     });
-    // In a real app, this would navigate to a detailed view or open a modal
+    // Toggle the expanded state for this task
+    toggleExpandTask(taskId);
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 hover-scale">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Clock className="h-5 w-5 text-brand-teal" />
@@ -177,7 +247,7 @@ const TaskMonitor: React.FC = () => {
                   </div>
                 </div>
                 
-                {task.status === "running" && (
+                {task.status === "running" || task.status === "completed" ? (
                   <div className="mb-4 px-8">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Progress</span>
@@ -189,14 +259,17 @@ const TaskMonitor: React.FC = () => {
                       <span>ETA: {task.eta}</span>
                     </div>
                   </div>
-                )}
+                ) : null}
                 
                 <CollapsibleContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 px-8">
                     {task.steps.map((step, index) => (
                       <div 
                         key={index} 
-                        className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm"
+                        className={`flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm ${
+                          step.status === 'running' ? 'border-l-4 border-brand-teal' : 
+                          step.status === 'completed' ? 'border-l-4 border-green-500' : ''
+                        }`}
                       >
                         <span className="truncate">{step.name}</span>
                         <StatusBadge status={step.status} />
