@@ -63,13 +63,7 @@ const Documents = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button 
-                onClick={handleUpload}
-                className="bg-brand-teal hover:bg-brand-teal/90 flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Upload</span>
-              </Button>
+             
             </div>
 
             {filteredDocuments.length === 0 ? (

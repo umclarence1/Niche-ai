@@ -3,7 +3,6 @@ import React from "react";
 import MainLayout from "../components/layout/MainLayout";
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
 import AgentConfiguration from "../components/Dashboard/AgentConfiguration";
-import FileUpload from "../components/Dashboard/FileUpload";
 import TaskMonitor from "../components/Dashboard/TaskMonitor";
 import WorkflowHistory from "../components/Dashboard/WorkflowHistory";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +26,6 @@ const Index = () => {
         <div className="grid grid-cols-1 gap-4 md:gap-6">
           <AgentConfiguration />
           <div className={`grid grid-cols-1 ${isMobile ? "" : "lg:grid-cols-2"} gap-4 md:gap-6`}>
-            <FileUpload />
             <TaskMonitor />
           </div>
           <WorkflowHistory />

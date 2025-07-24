@@ -18,7 +18,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onCreateWorkflow }) =
           Knowledge Worker Dashboard
           <Star className="h-4 w-4 text-yellow-400 hidden sm:inline" />
         </h1>
-        <p className="text-brand-gray text-sm sm:text-base mt-1">Configure and monitor your autonomous agents</p>
+        <p className="text-brand-gray text-sm sm:text-base mt-1">Configure and keep an eye on your autonomous agents</p>
       </div>
       <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
         <Button 
