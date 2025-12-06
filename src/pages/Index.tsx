@@ -1,4 +1,3 @@
-
 import React from "react";
 import MainLayout from "../components/layout/MainLayout";
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
@@ -11,7 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const Index = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
+
   const handleCreateWorkflow = () => {
     toast({
       title: "Creating new workflow",
@@ -21,14 +20,24 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 animate-fade-in">
+      <div className="flex flex-col gap-6 lg:gap-8 animate-fade-in">
         <DashboardHeader onCreateWorkflow={handleCreateWorkflow} />
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
-          <AgentConfiguration />
-          <div className={`grid grid-cols-1 ${isMobile ? "" : "lg:grid-cols-2"} gap-4 md:gap-6`}>
-            <TaskMonitor />
+
+        <div className="grid grid-cols-1 gap-6 lg:gap-8">
+          {/* Agent Configuration - Full width */}
+          <section className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <AgentConfiguration />
+          </section>
+
+          {/* Task Monitor and Workflow History */}
+          <div className={`grid grid-cols-1 ${isMobile ? "" : "xl:grid-cols-2"} gap-6 lg:gap-8`}>
+            <section className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <TaskMonitor />
+            </section>
+            <section className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              <WorkflowHistory />
+            </section>
           </div>
-          <WorkflowHistory />
         </div>
       </div>
     </MainLayout>
